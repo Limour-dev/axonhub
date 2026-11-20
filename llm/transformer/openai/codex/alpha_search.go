@@ -38,9 +38,6 @@ func (t *OutboundTransformer) transformAlphaSearchRequest(ctx context.Context, l
 		// Keep client attribution headers off the wire: MergeInboundRequest runs
 		// after this transformer and would otherwise forward them upstream.
 		ScrubClientFingerprintHeaders(rawHeaders)
-		// Ah-Turn-Id is only read below for the fabricated turn metadata; drop
-		// it here so MergeInboundRequest cannot forward it upstream.
-		rawHeaders.Del(AHMetadataTurnIDHeader)
 	}
 	sessionID := GetSessionIDFromHeaders(rawHeaders)
 	if sessionID == "" {

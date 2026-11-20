@@ -85,6 +85,32 @@ func TestAlphaSearchRequestSessionIDPrecedence(t *testing.T) {
 	}
 }
 
+func TestAlphaSearchRequestTurnIDFromAHMetadata(t *testing.T) {
+	outbound := newAlphaSearchTestTransformer(t)
+	inbound := &llm.Request{
+		Model:       "mapped-model",
+		RequestType: llm.RequestTypeAlphaSearch,
+		APIFormat:   llm.APIFormatOpenAIAlphaSearch,
+		RawRequest: &httpclient.Request{Headers: http.Header{
+			AHMetadataTurnIDHeader: {"ah-turn-123"},
+		}},
+		AlphaSearch: &llm.AlphaSearchRequest{Body: []byte(`{"id":"body-session","model":"client-model","commands":{"search_query":[]}}`)},
+	}
+
+	// Retries transform the same request again, so merging must not consume the ID.
+	for range 2 {
+		request, err := outbound.TransformRequest(context.Background(), inbound)
+		require.NoError(t, err)
+		merged := httpclient.MergeInboundRequest(request, inbound.RawRequest)
+
+		var metadata TurnMetadata
+		require.NoError(t, json.Unmarshal([]byte(merged.Headers.Get(TurnMetadataHeader)), &metadata))
+		require.Equal(t, "ah-turn-123", metadata.TurnID)
+		require.Equal(t, "body-session", metadata.SessionID)
+		require.Empty(t, merged.Headers.Values(AHMetadataTurnIDHeader))
+	}
+}
+
 // TestAlphaSearchDoesNotForwardInboundUserAgent mirrors the Response path:
 // the alpha-search request presents the Codex default UA and never copies the
 // inbound client UA (issue #2635).

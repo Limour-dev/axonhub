@@ -93,6 +93,7 @@ func TestCodexOutbound_PassthroughModernCodexHeaders(t *testing.T) {
 	sim := newCodexSimulator(t)
 	req := newCodexChatCompletionRequest(t)
 	req.Header.Set("X-Codex-Turn-Metadata", `{"session_id":"turn-session","turn_id":"turn-123"}`)
+	req.Header.Set(AHMetadataTurnIDHeader, "ah-turn-123")
 	req.Header.Set("X-Codex-Window-Id", "window-123")
 	req.Header.Set("X-Client-Request-Id", "request-123")
 	req.Header.Set("X-Codex-Beta-Features", "js_repl")
@@ -103,6 +104,7 @@ func TestCodexOutbound_PassthroughModernCodexHeaders(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, `{"session_id":"turn-session","turn_id":"turn-123"}`, finalReq.Header.Get("X-Codex-Turn-Metadata"))
+	assert.Empty(t, finalReq.Header.Get(AHMetadataTurnIDHeader))
 	assert.Equal(t, "window-123", finalReq.Header.Get("X-Codex-Window-Id"))
 	assert.Equal(t, "request-123", finalReq.Header.Get("X-Client-Request-Id"))
 	assert.Equal(t, "js_repl", finalReq.Header.Get("X-Codex-Beta-Features"))
@@ -133,7 +135,7 @@ func TestCodexOutbound_NonCodexInboundDefaults(t *testing.T) {
 	// ordinary OpenAI-compatible clients.
 	assert.Empty(t, finalReq.Header.Get("X-Openai-Internal-Codex-Responses-Lite"))
 
-	// X-Client-Request-Id and the turn id are per-request UUIDs.
+	// X-Client-Request-Id is a per-request UUID.
 	clientRequestID := finalReq.Header.Get("X-Client-Request-Id")
 	require.NotEmpty(t, clientRequestID)
 	_, err = uuid.Parse(clientRequestID)
@@ -180,7 +182,7 @@ func TestCodexOutbound_TurnIDFromAHMetadata(t *testing.T) {
 		sim := newCodexSimulator(t)
 		req := newCodexChatCompletionRequest(t)
 		req.Header.Set("Session-Id", "fixed-session")
-		req.Header.Set(AHMetadataTurnIDHeader, "ah-turn-123")
+		req.Header.Set(AHMetadataTurnIDHeader, " ah-turn-123 ")
 
 		finalReq, err := sim.Simulate(ctx, req)
 		require.NoError(t, err)

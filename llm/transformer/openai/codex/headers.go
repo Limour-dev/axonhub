@@ -25,8 +25,8 @@ const (
 
 	// AHMetadataTurnIDHeader is the AxonHub-branded per-turn id that the
 	// fabricated X-Codex-Turn-Metadata copies into turn_id. It is client
-	// metadata, not a Codex header: it never goes upstream on its own, and the
-	// transformers that read it delete it from the inbound request.
+	// metadata, not a Codex header: MergeInboundRequest filters it out so it
+	// stays available to the transformer on retries without going upstream.
 	AHMetadataTurnIDHeader = "Ah-Turn-Id"
 )
 

@@ -226,9 +226,6 @@ func (t *OutboundTransformer) TransformRequest(ctx context.Context, llmReq *llm.
 		ScrubClientFingerprintHeaders(llmReq.RawRequest.Headers)
 		rawOriginator = llmReq.RawRequest.Headers.Get("Originator")
 		rawTurnMetadata = llmReq.RawRequest.Headers.Get(TurnMetadataHeader)
-		// Ah-Turn-Id only feeds the turn metadata fabricated below; drop it so
-		// MergeInboundRequest cannot send it to chatgpt.com as an unknown header.
-		rawHeaders.Del(AHMetadataTurnIDHeader)
 
 		// Responses Lite selects a private Codex protocol mode. It is not
 		// identity metadata: never fabricate it for OpenAI-compatible clients.
