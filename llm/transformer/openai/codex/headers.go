@@ -22,6 +22,12 @@ const (
 	// http.Header canonicalizes keys, so lookups match regardless of case, and
 	// the wire name is case-insensitive per RFC 9110.
 	ResponsesLiteHeader = "X-Openai-Internal-Codex-Responses-Lite"
+
+	// AHMetadataTurnIDHeader is the AxonHub-branded per-turn id that the
+	// fabricated X-Codex-Turn-Metadata copies into turn_id. It is client
+	// metadata, not a Codex header: it never goes upstream on its own, and the
+	// transformers that read it delete it from the inbound request.
+	AHMetadataTurnIDHeader = "Ah-Turn-Id"
 )
 
 type TurnMetadata struct {
@@ -136,6 +142,17 @@ func hashUint64(value string) uint64 {
 
 	sum := sha256.Sum256([]byte(value))
 	return binary.BigEndian.Uint64(sum[:8])
+}
+
+// turnIDForMetadata picks the turn_id AxonHub writes into fabricated turn
+// metadata: the inbound Ah-Turn-Id when the client set one, otherwise the
+// session id so every request of a session shares a stable turn identity.
+func turnIDForMetadata(headers http.Header, sessionID string) string {
+	if turnID := strings.TrimSpace(headers.Get(AHMetadataTurnIDHeader)); turnID != "" {
+		return turnID
+	}
+
+	return sessionID
 }
 
 func GetSessionIDFromHeaders(headers http.Header) string {

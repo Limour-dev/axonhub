@@ -150,8 +150,8 @@ func TestCodexOutbound_NonCodexInboundDefaults(t *testing.T) {
 	assert.Equal(t, "user", turnMetadata.ThreadSource)
 	assert.Equal(t, "none", turnMetadata.Sandbox)
 	assert.Empty(t, turnMetadata.Workspaces)
-	_, err = uuid.Parse(turnMetadata.TurnID)
-	assert.NoError(t, err)
+	// turn_id mirrors the session when the client sends no Ah-Turn-Id.
+	assert.Equal(t, sessionID, turnMetadata.TurnID)
 
 	// turn_started_at_unix_ms is deterministic per session and stays inside the
 	// current 10-minute bucket.
@@ -169,6 +169,44 @@ func TestCodexOutbound_NonCodexInboundDefaults(t *testing.T) {
 	var turnMetadata2 TurnMetadata
 	require.NoError(t, json.Unmarshal([]byte(finalReq2.Header.Get("X-Codex-Turn-Metadata")), &turnMetadata2))
 	assert.Equal(t, turnMetadata.TurnStartedAtUnixMS, turnMetadata2.TurnStartedAtUnixMS)
+}
+
+// TestCodexOutbound_TurnIDFromAHMetadata pins the fabricated turn_id source:
+// the AxonHub-branded Ah-Turn-Id when the client sends one, the session id
+// otherwise, and never the header itself on the wire.
+func TestCodexOutbound_TurnIDFromAHMetadata(t *testing.T) {
+	t.Run("Ah-Turn-Id becomes turn_id and is not forwarded", func(t *testing.T) {
+		ctx := context.Background()
+		sim := newCodexSimulator(t)
+		req := newCodexChatCompletionRequest(t)
+		req.Header.Set("Session-Id", "fixed-session")
+		req.Header.Set(AHMetadataTurnIDHeader, "ah-turn-123")
+
+		finalReq, err := sim.Simulate(ctx, req)
+		require.NoError(t, err)
+
+		var turnMetadata TurnMetadata
+		require.NoError(t, json.Unmarshal([]byte(finalReq.Header.Get(TurnMetadataHeader)), &turnMetadata))
+		assert.Equal(t, "ah-turn-123", turnMetadata.TurnID)
+		assert.Equal(t, "fixed-session", turnMetadata.SessionID)
+
+		assert.Empty(t, finalReq.Header.Get(AHMetadataTurnIDHeader))
+	})
+
+	t.Run("blank Ah-Turn-Id falls back to the session id", func(t *testing.T) {
+		ctx := context.Background()
+		sim := newCodexSimulator(t)
+		req := newCodexChatCompletionRequest(t)
+		req.Header.Set("Session-Id", "fixed-session")
+		req.Header.Set(AHMetadataTurnIDHeader, "   ")
+
+		finalReq, err := sim.Simulate(ctx, req)
+		require.NoError(t, err)
+
+		var turnMetadata TurnMetadata
+		require.NoError(t, json.Unmarshal([]byte(finalReq.Header.Get(TurnMetadataHeader)), &turnMetadata))
+		assert.Equal(t, "fixed-session", turnMetadata.TurnID)
+	})
 }
 
 func TestCodexOutbound_SessionIDPrecedence(t *testing.T) {
