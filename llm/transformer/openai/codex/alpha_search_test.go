@@ -76,6 +76,8 @@ func TestAlphaSearchRequestSessionIDPrecedence(t *testing.T) {
 			var metadata TurnMetadata
 			require.NoError(t, json.Unmarshal([]byte(request.Headers.Get(TurnMetadataHeader)), &metadata))
 			require.Equal(t, tt.expectedSession, metadata.SessionID)
+			require.Equal(t, metadata.SessionID, metadata.RootTurnID)
+			require.Equal(t, "new", metadata.HistoryInitialization)
 			require.Equal(t, tt.expectedSession, metadata.ThreadID)
 
 			var body map[string]any

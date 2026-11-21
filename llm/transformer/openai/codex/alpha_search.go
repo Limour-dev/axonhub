@@ -95,14 +95,16 @@ func (t *OutboundTransformer) transformAlphaSearchRequest(ctx context.Context, l
 			installationID = uuid.NewSHA1(uuid.NameSpaceOID, []byte(accountID)).String()
 		}
 		metadata := TurnMetadata{
-			InstallationID: installationID,
-			SessionID:      sessionID,
-			ThreadID:       sessionID,
-			TurnID:         turnIDForMetadata(rawHeaders, sessionID),
-			WindowID:       headers.Get(WindowIDHeader),
-			RequestKind:    "turn",
-			ThreadSource:   "user",
-			Sandbox:        "none",
+			InstallationID:        installationID,
+			SessionID:             sessionID,
+			ThreadID:              sessionID,
+			TurnID:                turnIDForMetadata(rawHeaders, sessionID),
+			RootTurnID:            sessionID,
+			HistoryInitialization: "new",
+			WindowID:              headers.Get(WindowIDHeader),
+			RequestKind:           "turn",
+			ThreadSource:          "user",
+			Sandbox:               "none",
 		}
 		if encoded, marshalErr := json.Marshal(metadata); marshalErr == nil {
 			headers.Set(TurnMetadataHeader, string(encoded))

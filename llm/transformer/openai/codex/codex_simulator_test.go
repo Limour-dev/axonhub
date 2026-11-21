@@ -191,6 +191,8 @@ func TestCodexOutbound_TurnIDFromAHMetadata(t *testing.T) {
 		require.NoError(t, json.Unmarshal([]byte(finalReq.Header.Get(TurnMetadataHeader)), &turnMetadata))
 		assert.Equal(t, "ah-turn-123", turnMetadata.TurnID)
 		assert.Equal(t, "fixed-session", turnMetadata.SessionID)
+		assert.Equal(t, turnMetadata.SessionID, turnMetadata.RootTurnID)
+		assert.Equal(t, "new", turnMetadata.HistoryInitialization)
 
 		assert.Empty(t, finalReq.Header.Get(AHMetadataTurnIDHeader))
 	})

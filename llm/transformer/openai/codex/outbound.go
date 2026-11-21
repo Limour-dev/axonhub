@@ -358,15 +358,17 @@ func (t *OutboundTransformer) TransformRequest(ctx context.Context, llmReq *llm.
 			installationID = uuid.NewSHA1(uuid.NameSpaceOID, []byte(accountID)).String()
 		}
 		turnMetadata, _ := json.Marshal(TurnMetadata{
-			InstallationID:      installationID,
-			SessionID:           sessionID,
-			ThreadID:            sessionID,
-			TurnID:              turnIDForMetadata(rawHeaders, sessionID),
-			WindowID:            windowID,
-			RequestKind:         "turn",
-			ThreadSource:        "user",
-			Sandbox:             "none",
-			TurnStartedAtUnixMS: turnStartedAtUnixMS(sessionID),
+			InstallationID:        installationID,
+			SessionID:             sessionID,
+			ThreadID:              sessionID,
+			TurnID:                turnIDForMetadata(rawHeaders, sessionID),
+			RootTurnID:            sessionID,
+			HistoryInitialization: "new",
+			WindowID:              windowID,
+			RequestKind:           "turn",
+			ThreadSource:          "user",
+			Sandbox:               "none",
+			TurnStartedAtUnixMS:   turnStartedAtUnixMS(sessionID),
 		})
 		hreq.Headers.Set(TurnMetadataHeader, string(turnMetadata))
 	}

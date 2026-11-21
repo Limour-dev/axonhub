@@ -31,16 +31,18 @@ const (
 )
 
 type TurnMetadata struct {
-	InstallationID      string         `json:"installation_id"`
-	SessionID           string         `json:"session_id"`
-	ThreadID            string         `json:"thread_id"`
-	TurnID              string         `json:"turn_id"`
-	WindowID            string         `json:"window_id"`
-	RequestKind         string         `json:"request_kind"`
-	ThreadSource        string         `json:"thread_source"`
-	Sandbox             string         `json:"sandbox"`
-	TurnStartedAtUnixMS int64          `json:"turn_started_at_unix_ms"`
-	Workspaces          map[string]any `json:"workspaces,omitempty"`
+	InstallationID        string         `json:"installation_id"`
+	SessionID             string         `json:"session_id"`
+	ThreadID              string         `json:"thread_id"`
+	TurnID                string         `json:"turn_id"`
+	RootTurnID            string         `json:"root_turn_id"`
+	HistoryInitialization string         `json:"history_initialization"`
+	WindowID              string         `json:"window_id"`
+	RequestKind           string         `json:"request_kind"`
+	ThreadSource          string         `json:"thread_source"`
+	Sandbox               string         `json:"sandbox"`
+	TurnStartedAtUnixMS   int64          `json:"turn_started_at_unix_ms"`
+	Workspaces            map[string]any `json:"workspaces,omitempty"`
 }
 
 // PassthroughHeaders lists client metadata that Codex-compatible upstreams use
